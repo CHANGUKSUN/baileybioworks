@@ -10,10 +10,10 @@
  * 3) “View All(전체 사례 보기)” 버튼 → 도입 문의로 연결 (모달 오픈)
  *
  * ✅ 이미지 파일 (public 폴더에 정확히 존재해야 함 / 리눅스 대소문자 엄격)
- * - public/portfolio_1.JPG
- * - public/IMG_1522.JPG
- * - public/IMG_9195.JPG
- * - public/IMG_1538.JPG
+ * - public/portfolio_1.jpg
+ * - public/img_1522.jpg
+ * - public/img_9195.jpg
+ * - public/img_1538.jpg
  */
 
 // ---------------------------------------------------------
@@ -559,10 +559,10 @@ useEffect(() => {
   // ---------------------------------------------
   const portfolioItems = useMemo(
     () => [
-      { src: '/portfolio_1.JPG', title: t.portfolio.case1 },
-      { src: '/IMG_1522.JPG', title: t.portfolio.case2 },
-      { src: '/IMG_9195.JPG', title: t.portfolio.case3 },
-      { src: '/IMG_1538.JPG', title: t.portfolio.case4 },
+      { src: '/portfolio_1.jpg', title: t.portfolio.case1 },
+      { src: '/img_1522.jpg', title: t.portfolio.case2 },
+      { src: '/img_9195.jpg', title: t.portfolio.case3 },
+      { src: '/img_1538.jpg', title: t.portfolio.case4 },
     ],
     [t.portfolio.case1, t.portfolio.case2, t.portfolio.case3, t.portfolio.case4]
   );
@@ -745,7 +745,7 @@ useEffect(() => {
   <div className="absolute inset-0 z-0">
     {/* 1번 이미지 */}
     <img
-      src="/IMG_0319.JPG"
+      src="/img_0319.jpg"
       alt="Hero background 1"
       className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
         heroSlide === 0 ? 'opacity-100' : 'opacity-0'
@@ -870,7 +870,7 @@ useEffect(() => {
             {/* 이미지 영역 */}
             <div className="flex-1 bg-slate-50 relative min-h-[420px] flex items-center justify-center p-10">
               <motion.div key={activeTab} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="relative w-full h-[380px]">
-                <Image src="/IMG_0402.JPG" alt="Product machine" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'contain' }} />
+                <Image src="/img_0402.jpg" alt="Product machine" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'contain' }} />
               </motion.div>
             </div>
           </motion.div>
