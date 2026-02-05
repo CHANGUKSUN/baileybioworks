@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import Header from "./components/Header"; // 👈 [중요] 아까 만든 메뉴판 부품 가져오기
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +42,7 @@ export const metadata: Metadata = {
     type: "website",
   },
 
-  // 5. 네이버 소유권 확인
+  // 5. 네이버 소유권 확인 (완료됨)
   verification: {
     other: {
       "naver-site-verification": "633ac7b3871aa163d4876b80c2ec438aa298f422",
@@ -61,15 +60,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 1. 상단 메뉴바 (모바일/PC 반응형) */}
-        <Header />
+        {/* 현재 깃허브에는 components/Header.tsx 파일이 없으므로,
+            에러 방지를 위해 관련 코드를 모두 삭제했습니다.
+        */}
 
-        {/* 2. 본문 내용 (메뉴바에 가려지지 않게 위쪽에 여백 pt-16 추가) */}
-        <div className="pt-16">
+        {/* 메뉴바가 없는 상태이므로, 본문 상단 여백(pt-16)을 제거하여 
+            화면이 상단부터 꽉 차게 나오도록 수정했습니다. 
+        */}
+        <main>
           {children}
-        </div>
+        </main>
 
-        {/* 3. 통계 수집기 */}
+        {/* 통계 수집기 (정상 작동 중) */}
         <Analytics />
       </body>
     </html>
