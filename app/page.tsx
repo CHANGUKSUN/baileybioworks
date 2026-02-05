@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 
 // ---------------------------------------------------------
-// 2) 번역 데이터 (필요하면 이 객체만 수정하면 됨)
+// 2) 번역 데이터
 // ---------------------------------------------------------
 const translations = {
   ko: {
@@ -148,8 +148,6 @@ const translations = {
       tip: '✅ 팁: 복사 후 카카오톡/문자에 붙여넣으면 가장 빠릅니다.',
     },
   },
-
-  // 영어는 최소 구성 (필요하면 ko처럼 상세화)
   en: {
     nav: {
       products: 'Products',
@@ -247,8 +245,6 @@ const translations = {
       tip: 'Tip: Copy & paste into messenger for fastest response.',
     },
   },
-
-  // 재미용 (폰트만 mono로 바뀌고 텍스트는 ... )
   alien: {
     nav: { products: '...', safety: '...', portfolio: '...', technology: '...', solutions: '...', test: '...', contact: '...' },
     hero: { badge: '...', title1: '...', title2: '...', desc: '...', ctaPrimary: '...', ctaSecondary: '...', ticker: '...' },
@@ -305,7 +301,6 @@ const NaverIcon = ({ size = 24, className = '' }: { size?: number; className?: s
 
 // ---------------------------------------------------------
 // 6) 문의 텍스트/메일to 생성 유틸
-//    - 실제 메일 내용은 "한국어 템플릿"으로 통일(운영 편의)
 // ---------------------------------------------------------
 function buildInquiryText(t: (typeof translations)['ko'], inquiryType: InquiryType, name: string, contact: string) {
   const typeText = inquiryType === 'test' ? t.modal.type2 : t.modal.type1;
@@ -320,10 +315,13 @@ function buildMailto(t: (typeof translations)['ko'], inquiryType: InquiryType, n
 
 // ---------------------------------------------------------
 // 7) 바깥 클릭 감지 훅
-//    - 메뉴/모달 등에서 바깥 클릭 시 닫기 구현용
-//    - removeEventListener가 정확히 되도록 listener 함수를 동일 참조로 유지
+//    ✅ 수정됨: HTMLElement | null 타입을 허용하도록 변경
 // ---------------------------------------------------------
-function useOnClickOutside(refs: React.RefObject<HTMLElement>[], handler: () => void, enabled = true) {
+function useOnClickOutside(
+  refs: React.RefObject<HTMLElement | any>[],
+  handler: () => void,
+  enabled = true
+) {
   useEffect(() => {
     if (!enabled) return;
 
@@ -357,10 +355,7 @@ export default function Page() {
   // (A) UI 상태들
   // ---------------------------------------------
   const [isScrolled, setIsScrolled] = useState(false);
-  // 히어로 슬라이드 인덱스 (0,1)
   const [heroSlide, setHeroSlide] = useState(0);
-
-
 
   // 제품 탭: basic / pro
   const [activeTab, setActiveTab] = useState<'basic' | 'pro'>('basic');
@@ -380,7 +375,7 @@ export default function Page() {
   const [copied, setCopied] = useState(false);
 
   // ---------------------------------------------
-  // (B) 번역 선택 (lang 바뀌면 t 바뀜)
+  // (B) 번역 선택
   // ---------------------------------------------
   const t = useMemo(() => translations[lang] ?? translations.ko, [lang]);
 
@@ -389,31 +384,28 @@ export default function Page() {
   // ---------------------------------------------
   const langButtonRef = useRef<HTMLButtonElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
-
   const modalFirstFocusRef = useRef<HTMLInputElement>(null);
 
   // ---------------------------------------------
-  // (D) 스크롤 감지: 네비 배경 변경
+  // (D) 스크롤 감지
   // ---------------------------------------------
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // 첫 렌더 시 상태 갱신
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // 히어로 배경 5초마다 자동 슬라이드
-useEffect(() => {
-  const id = window.setInterval(() => {
-    setHeroSlide((prev) => (prev + 1) % 2); // 0 <-> 1
-  }, 7000);
-
-  return () => window.clearInterval(id);
-}, []);
-
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setHeroSlide((prev) => (prev + 1) % 2);
+    }, 5000); // 7000 -> 5000 (조금 더 빠르게)
+    return () => window.clearInterval(id);
+  }, []);
 
   // ---------------------------------------------
-  // (E) ESC로 모달/언어메뉴 닫기
+  // (E) ESC로 닫기
   // ---------------------------------------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -431,18 +423,14 @@ useEffect(() => {
   useOnClickOutside([langButtonRef, langMenuRef], () => setIsLangMenuOpen(false), isLangMenuOpen);
 
   // ---------------------------------------------
-  // (G) 모달 열릴 때: 포커스 + copied 초기화
+  // (G) 모달 열릴 때 포커스
   // ---------------------------------------------
   useEffect(() => {
     if (!isModalOpen) return;
-
     setCopied(false);
-
-    // 모달이 DOM에 붙고 난 뒤 focus (안전하게 timeout)
     const id = window.setTimeout(() => {
       modalFirstFocusRef.current?.focus();
     }, 50);
-
     return () => window.clearTimeout(id);
   }, [isModalOpen]);
 
@@ -469,7 +457,7 @@ useEffect(() => {
   };
 
   // ---------------------------------------------
-  // (J) 모달 오픈: 문의 유형 지정
+  // (J) 모달 오픈
   // ---------------------------------------------
   const openModal = (type: InquiryType) => {
     setInquiryType(type);
@@ -477,7 +465,7 @@ useEffect(() => {
   };
 
   // ---------------------------------------------
-  // (K) 모달 닫기: 폼 초기화 (원하시면 값 유지로 바꿀 수 있음)
+  // (K) 모달 닫기
   // ---------------------------------------------
   const closeModal = () => {
     setIsModalOpen(false);
@@ -498,12 +486,11 @@ useEffect(() => {
   // ---------------------------------------------
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } },
   };
 
   // ---------------------------------------------
-  // (N) 문의 텍스트: 복사/공유에 동일 사용
-  //     운영 편의상 ko 템플릿으로 고정
+  // (N) 문의 텍스트 생성
   // ---------------------------------------------
   const inquiryText = useMemo(() => buildInquiryText(translations.ko, inquiryType, formData.name, formData.contact), [
     inquiryType,
@@ -512,17 +499,15 @@ useEffect(() => {
   ]);
 
   // ---------------------------------------------
-  // (O) 메일 문의 제출: mailto 실행
+  // (O) 메일 문의 제출
   // ---------------------------------------------
   const handleMailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // mailto는 사용자 환경에 따라 실패할 수 있으므로,
-    // 아래의 "복사" 버튼도 함께 제공하여 전환율 보강
     window.location.href = buildMailto(translations.ko, inquiryType, formData.name, formData.contact);
   };
 
   // ---------------------------------------------
-  // (P) 복사 버튼: clipboard API + 실패 시 prompt fallback
+  // (P) 복사 버튼
   // ---------------------------------------------
   const handleCopy = async () => {
     try {
@@ -535,13 +520,11 @@ useEffect(() => {
   };
 
   // ---------------------------------------------
-  // (Q) 공유 버튼: Web Share API 지원 시 공유 / 미지원이면 복사
+  // (Q) 공유 버튼
   // ---------------------------------------------
   const handleShare = async () => {
     const shareData = { title: SITE_TITLE, text: inquiryText };
-
     try {
-      // navigator.share는 일부 브라우저에서만 존재 (타입상 optional)
       if (typeof navigator !== 'undefined' && 'share' in navigator) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (navigator as any).share(shareData);
@@ -549,8 +532,7 @@ useEffect(() => {
         await handleCopy();
       }
     } catch {
-      // 사용자가 공유 취소해도 에러로 들어올 수 있는데,
-      // 전환 흐름에는 문제 없으므로 조용히 무시
+      // ignore
     }
   };
 
@@ -568,9 +550,7 @@ useEffect(() => {
   );
 
   // ---------------------------------------------
-  // (S) ✅ “View All” 버튼 기능:
-  //     - 지금 목표: '도입 문의'로 연결(전환율)
-  //     - 클릭 시 → 일반 문의 모달 오픈
+  // (S) “View All” 버튼 기능
   // ---------------------------------------------
   const handleViewAll = () => {
     openModal('general');
@@ -581,10 +561,7 @@ useEffect(() => {
   // =========================================================
   return (
     <div className={`min-h-screen bg-white text-slate-900 selection:bg-slate-200 ${lang === 'alien' ? 'font-mono' : 'font-sans'}`}>
-      {/* -------------------------------------------------------
-          0-1) 최상단 전광판 (Ticker)
-          - framer-motion 대신 CSS 애니로 끊김 최소화
-         ------------------------------------------------------- */}
+      {/* 0-1) 최상단 전광판 (Ticker) */}
       <div className="fixed top-0 left-0 right-0 h-10 bg-slate-100 z-50 flex items-center overflow-hidden border-b border-slate-200">
         <div className="ticker w-full">
           <div className="ticker__track text-slate-500 text-xs font-medium tracking-widest uppercase">
@@ -596,7 +573,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ticker styles (페이지 내부 CSS) */}
       <style jsx>{`
         .ticker {
           position: relative;
@@ -631,9 +607,7 @@ useEffect(() => {
         }
       `}</style>
 
-      {/* -------------------------------------------------------
-          0-2) 내비게이션 바
-         ------------------------------------------------------- */}
+      {/* 0-2) 내비게이션 바 */}
       <nav
         className={`fixed top-10 left-0 right-0 z-40 transition-all duration-500 ${
           isScrolled ? 'bg-white/90 backdrop-blur-xl border-b border-slate-200 py-3' : 'bg-transparent py-6'
@@ -641,7 +615,6 @@ useEffect(() => {
         aria-label="Primary"
       >
         <div className="container mx-auto px-6 flex items-center justify-between">
-          {/* 로고(맨 위로 이동) */}
           <button
             type="button"
             className="flex items-center gap-2 cursor-pointer text-left"
@@ -657,7 +630,6 @@ useEffect(() => {
             </span>
           </button>
 
-          {/* 데스크탑 메뉴 */}
           <div className={`hidden lg:flex items-center space-x-8 text-sm font-semibold transition-colors ${isScrolled ? 'text-slate-600' : 'text-slate-300'}`}>
             <button onClick={() => scrollToSection('product')} className={`hover:text-opacity-80 transition-colors ${isScrolled ? 'hover:text-slate-900' : 'hover:text-white'}`}>
               {t.nav.products}
@@ -674,8 +646,6 @@ useEffect(() => {
             <button onClick={() => scrollToSection('solutions')} className={`hover:text-opacity-80 transition-colors ${isScrolled ? 'hover:text-slate-900' : 'hover:text-white'}`}>
               {t.nav.solutions}
             </button>
-
-            {/* 추출 테스트(전환 버튼) */}
             <button
               onClick={() => openModal('test')}
               className={`font-bold flex items-center gap-1 transition-colors ${isScrolled ? 'text-purple-600 hover:text-purple-800' : 'text-purple-300 hover:text-purple-100'}`}
@@ -684,9 +654,7 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* 우측 버튼들 */}
           <div className="flex items-center gap-4">
-            {/* Language dropdown */}
             <div className="relative">
               <button
                 ref={langButtonRef}
@@ -720,7 +688,6 @@ useEffect(() => {
               )}
             </div>
 
-            {/* 도입 문의(모달 오픈) */}
             <button
               onClick={() => openModal('general')}
               className={`hidden md:flex items-center gap-1 px-5 py-2 rounded-full text-xs font-semibold tracking-wide transition-all shadow-lg ${
@@ -733,81 +700,59 @@ useEffect(() => {
         </div>
       </nav>
 
-      {/* -------------------------------------------------------
-          1) 히어로 섹션
-          - next/image + priority로 LCP 최적화
-         ------------------------------------------------------- */}
-      <section
-  id="hero"
-  className="relative min-h-screen flex items-center justify-center overflow-hidden pt-40 pb-20"
->
-  {/* 배경 슬라이드 레이어 */}
-  <div className="absolute inset-0 z-0">
-    {/* 1번 이미지 */}
-    <img
-      src="/img_0319.jpg"
-      alt="Hero background 1"
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-        heroSlide === 0 ? 'opacity-100' : 'opacity-0'
-      }`}
-      style={{ filter: 'brightness(1.15) contrast(1.05)' }}
-    />
+      {/* 1) 히어로 섹션 */}
+      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-40 pb-20">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/img_0319.jpg"
+            alt="Hero background 1"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              heroSlide === 0 ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ filter: 'brightness(1.15) contrast(1.05)' }}
+          />
+          <img
+            src="/b2bbbw.png"
+            alt="Hero background 2"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+              heroSlide === 1 ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ filter: 'brightness(1.15) contrast(1.05)' }}
+          />
+          <div className="absolute inset-0 bg-black/70" />
+        </div>
 
-    {/* 2번 이미지 (아이소매트릭) */}
-    <img
-      src="/b2bbbw.png"
-      alt="Hero background 2"
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-        heroSlide === 1 ? 'opacity-100' : 'opacity-0'
-      }`}
-      style={{ filter: 'brightness(1.15) contrast(1.05)' }}
-    />
+        <div className="container mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+            {t.hero.title1}
+            <br />
+            <span className="text-slate-200">{t.hero.title2}</span>
+          </h1>
+          <p className="text-white/90 text-lg max-w-2xl mb-10 whitespace-pre-line">
+            {t.hero.desc}
+          </p>
+          <div className="flex gap-4">
+            <button
+              className="px-8 py-4 bg-blue-600 text-white rounded-full"
+              onClick={() => openModal('general')}
+            >
+              {t.hero.ctaPrimary}
+            </button>
+            <button
+              className="px-8 py-4 bg-white/10 border border-white/30 text-white rounded-full"
+              onClick={() => scrollToSection('features')}
+            >
+              {t.hero.ctaSecondary}
+            </button>
+          </div>
+        </div>
+      </section>
 
-    {/* 글씨 가독성용 오버레이 (너무 어둡지 않게 25%) */}
-    <div className="absolute inset-0 bg-black/70" />
-  </div>
-
-  {/* 텍스트/버튼 레이어 */}
-  <div className="container mx-auto px-6 relative z-10 flex flex-col items-center text-center">
-    <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-      {t.hero.title1}
-      <br />
-      <span className="text-slate-200">{t.hero.title2}</span>
-    </h1>
-
-    <p className="text-white/90 text-lg max-w-2xl mb-10 whitespace-pre-line">
-      {t.hero.desc}
-    </p>
-
-    <div className="flex gap-4">
-      <button
-        className="px-8 py-4 bg-blue-600 text-white rounded-full"
-        onClick={() => openModal('general')}
-      >
-        {t.hero.ctaPrimary}
-      </button>
-      <button
-        className="px-8 py-4 bg-white/10 border border-white/30 text-white rounded-full"
-        onClick={() => scrollToSection('features')}
-      >
-        {t.hero.ctaSecondary}
-      </button>
-    </div>
-  </div>
-</section>
-
-
-
-
-      {/* -------------------------------------------------------
-          2) 제품 라인업 (탭)
-         ------------------------------------------------------- */}
+      {/* 2) 제품 라인업 */}
       <section id="product" className="py-32 bg-[#F5F5F7]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-8 text-slate-900">{t.product.title}</h2>
-
-            {/* 탭 버튼 */}
             <div className="inline-flex p-1 bg-slate-200/80 rounded-full">
               <button
                 onClick={() => setActiveTab('basic')}
@@ -824,7 +769,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* 탭 내용 카드 */}
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, scale: 0.98 }}
@@ -832,12 +776,10 @@ useEffect(() => {
             transition={{ duration: 0.5 }}
             className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden flex flex-col md:flex-row max-w-6xl mx-auto"
           >
-            {/* 텍스트 영역 */}
             <div className="flex-1 p-12 md:p-20 flex flex-col justify-center">
               <span className="text-blue-600 font-bold tracking-wide text-xs mb-4 uppercase">{activeTab === 'basic' ? 'Standard Series' : 'Professional Series'}</span>
               <h3 className="text-4xl font-bold mb-6 text-slate-900">{activeTab === 'basic' ? t.product.tabBasic : t.product.tabPro}</h3>
               <p className="text-slate-500 text-lg leading-relaxed mb-10">{activeTab === 'basic' ? t.product.basicDesc : t.product.proDesc}</p>
-
               <ul className="space-y-4">
                 {activeTab === 'basic' ? (
                   <>
@@ -866,8 +808,6 @@ useEffect(() => {
                 )}
               </ul>
             </div>
-
-            {/* 이미지 영역 */}
             <div className="flex-1 bg-slate-50 relative min-h-[420px] flex items-center justify-center p-10">
               <motion.div key={activeTab} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="relative w-full h-[380px]">
                 <Image src="/img_0402.jpg" alt="Product machine" fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: 'contain' }} />
@@ -877,9 +817,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------------
-          3) 위생 및 안전
-         ------------------------------------------------------- */}
+      {/* 3) 위생 및 안전 */}
       <section id="safety" className="py-32 bg-white">
         <div className="container mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-20">
@@ -889,11 +827,9 @@ useEffect(() => {
             <h2 className="text-4xl font-bold mb-6 text-slate-900">{t.safety.title}</h2>
             <p className="text-slate-500 whitespace-pre-line text-lg">{t.safety.subtitle}</p>
           </motion.div>
-
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { icon: ShieldCheck, title: t.safety.card1Title, desc: t.safety.card1Desc, color: 'text-blue-600', bg: 'bg-blue-50' },
-              // ✅ 주의: 원래 Microscope였는데 import가 없으니 ClipboardCheck로 대체(배포 에러 방지)
               { icon: ClipboardCheck, title: t.safety.card2Title, desc: t.safety.card2Desc, color: 'text-green-600', bg: 'bg-green-50' },
               { icon: Droplets, title: t.safety.card3Title, desc: t.safety.card3Desc, color: 'text-cyan-600', bg: 'bg-cyan-50' },
             ].map((item, idx) => (
@@ -916,10 +852,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------------
-          3.5) 포트폴리오
-          ✅ “View All” 버튼 → 도입 문의 모달 오픈(핵심 변경)
-         ------------------------------------------------------- */}
+      {/* 3.5) 포트폴리오 */}
       <section id="portfolio" className="py-32 bg-slate-50">
         <div className="container mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex flex-col md:flex-row justify-between items-end mb-16">
@@ -927,14 +860,11 @@ useEffect(() => {
               <h2 className="text-4xl font-bold mb-6 text-slate-900">{t.portfolio.title}</h2>
               <p className="text-slate-500 whitespace-pre-line text-lg">{t.portfolio.subtitle}</p>
             </div>
-
-            {/* ✅ 변경: “전체 사례 보기” = 문의(도입)로 연결 */}
             <button
               type="button"
               className="hidden md:flex items-center gap-2 text-slate-900 font-semibold hover:text-blue-600 transition-colors mt-6 md:mt-0"
               onClick={handleViewAll}
               aria-label="Open inquiry (view all cases)"
-              title="전체 사례는 상담 시 안내드립니다"
             >
               {t.portfolio.viewAll} <ArrowRight size={18} />
             </button>
@@ -950,7 +880,6 @@ useEffect(() => {
                 whileInView="visible"
                 viewport={{ once: true }}
                 className="group relative aspect-[4/5] bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 text-left"
-                // 카드 클릭도 문의 모달 오픈 (전환율)
                 onClick={() => openModal('general')}
                 aria-label={`Open inquiry - ${item.title}`}
               >
@@ -962,7 +891,6 @@ useEffect(() => {
                   style={{ objectFit: 'cover' }}
                   className="transition-transform duration-700 group-hover:scale-110"
                 />
-
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                 <div className="absolute bottom-0 left-0 p-6">
                   <span className="text-white/80 text-xs font-bold tracking-wider mb-2 block uppercase">Case 0{idx + 1}</span>
@@ -974,16 +902,13 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------------
-          4) 핵심 기술
-         ------------------------------------------------------- */}
+      {/* 4) 핵심 기술 */}
       <section id="features" className="py-32 bg-white">
         <div className="container mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-20">
             <h2 className="text-4xl font-bold mb-6 text-slate-900">{t.features.title}</h2>
             <p className="text-slate-500 whitespace-pre-line text-lg">{t.features.subtitle}</p>
           </motion.div>
-
           <div className="grid md:grid-cols-2 gap-6">
             {[
               { title: t.features.f1, desc: t.features.f1Desc, badge: t.features.f1Badge, icon: Sliders },
@@ -1013,18 +938,14 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------------
-          5) 솔루션 (비즈니스 패키지)
-         ------------------------------------------------------- */}
+      {/* 5) 솔루션 */}
       <section id="solutions" className="py-32 bg-[#F5F5F7]">
         <div className="container mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-20">
             <h2 className="text-4xl font-bold mb-6 text-slate-900">{t.solutions.title}</h2>
             <p className="text-slate-500 text-lg">{t.solutions.subtitle}</p>
           </motion.div>
-
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Cafe Starter */}
             <motion.div
               variants={fadeInUp}
               initial="hidden"
@@ -1044,8 +965,6 @@ useEffect(() => {
                 {t.solutions.s1Btn}
               </button>
             </motion.div>
-
-            {/* Factory Lab */}
             <motion.div
               variants={fadeInUp}
               initial="hidden"
@@ -1069,16 +988,13 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* -------------------------------------------------------
-          6) 푸터(contact)
-         ------------------------------------------------------- */}
+      {/* 6) 푸터 */}
       <footer id="contact" className="bg-white border-t border-slate-100 py-20">
         <div className="container mx-auto px-6 grid md:grid-cols-2 gap-8 items-end">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tighter text-slate-900">
               베일리<span className="text-slate-400">바이오웍스</span>
             </h2>
-
             <div className="text-slate-500 text-sm font-medium">
               <p>{t.footer.address}</p>
               <p className="flex items-center gap-2">
@@ -1090,8 +1006,6 @@ useEffect(() => {
                   {EMAIL_TO}
                 </a>
               </p>
-
-              {/* 문의/전화 CTA (전환율) */}
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <a
                   href={`tel:${TECH_PHONE}`}
@@ -1107,12 +1021,9 @@ useEffect(() => {
                   <Mail size={18} /> {t.nav.contact}
                 </button>
               </div>
-
               <p className="mt-6 text-slate-400 text-xs">{t.footer.rights}</p>
             </div>
           </div>
-
-          {/* SNS 아이콘 (실제 링크 생기면 href 바꾸면 됨) */}
           <div className="flex md:justify-end gap-4">
             <a
               href="#"
@@ -1139,15 +1050,9 @@ useEffect(() => {
         </div>
       </footer>
 
-      {/* -------------------------------------------------------
-          7) 문의 모달
-          - overlay 클릭/ESC 닫기
-          - 포커스/스크롤 잠금
-          - CTA 3종 (메일/복사/공유) + 전화
-         ------------------------------------------------------- */}
+      {/* 7) 문의 모달 */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={t.modal.title}>
-          {/* Overlay: 버튼으로 만들어 접근성 & 클릭 닫기 */}
           <motion.button
             type="button"
             initial={{ opacity: 0 }}
@@ -1157,26 +1062,19 @@ useEffect(() => {
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             aria-label="Close dialog"
           />
-
-          {/* Panel */}
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="relative bg-white rounded-3xl p-10 w-full max-w-lg shadow-2xl z-10"
           >
-            {/* 닫기 버튼 */}
             <button onClick={closeModal} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900" aria-label={t.modal.close}>
               <X size={24} />
             </button>
-
-            {/* 문의 폼 */}
             <form onSubmit={handleMailSubmit} className="space-y-6">
               <div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{t.modal.title}</h3>
                 <p className="text-slate-500 text-sm">{t.modal.desc}</p>
               </div>
-
-              {/* 문의 유형 토글 */}
               <div className="p-1 bg-slate-100 rounded-lg flex text-sm font-medium" aria-label={t.modal.typeLabel}>
                 <button
                   type="button"
@@ -1193,16 +1091,12 @@ useEffect(() => {
                   {t.modal.type2}
                 </button>
               </div>
-
-              {/* 추출 테스트 안내 */}
               {inquiryType === 'test' && (
                 <div className="p-4 bg-purple-50 text-purple-700 text-sm rounded-xl border border-purple-100 flex items-start gap-3">
                   <Beaker className="shrink-0 mt-0.5" size={18} />
                   <span>{t.modal.testNote}</span>
                 </div>
               )}
-
-              {/* 이름 */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">{t.modal.nameLabel}</label>
                 <input
@@ -1215,8 +1109,6 @@ useEffect(() => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-
-              {/* 연락처 */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">{t.modal.contactLabel}</label>
                 <input
@@ -1228,8 +1120,6 @@ useEffect(() => {
                   onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                 />
               </div>
-
-              {/* CTA 1: 메일 + 복사 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="submit"
@@ -1237,7 +1127,6 @@ useEffect(() => {
                 >
                   <Mail size={18} /> {t.modal.submitMail}
                 </button>
-
                 <button
                   type="button"
                   onClick={handleCopy}
@@ -1246,8 +1135,6 @@ useEffect(() => {
                   <ClipboardCheck size={18} /> {copied ? t.modal.copied : t.modal.copy}
                 </button>
               </div>
-
-              {/* CTA 2: 전화 + 공유 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <a
                   href={`tel:${TECH_PHONE}`}
@@ -1263,7 +1150,6 @@ useEffect(() => {
                   <ArrowRight size={18} /> {t.modal.shareKakao}
                 </button>
               </div>
-
               <p className="text-xs text-slate-500">{t.modal.tip}</p>
             </form>
           </motion.div>
@@ -1273,12 +1159,9 @@ useEffect(() => {
   );
 }
 
-/**
- * ---------------------------------------------------------
- * 10) 커피 아이콘 (lucide Coffee를 안 쓰고 커스텀으로 유지)
- *     - import 추가 없이 사용 가능
- * ---------------------------------------------------------
- */
+// ---------------------------------------------------------
+// 10) 커피 아이콘
+// ---------------------------------------------------------
 function CoffeeIcon() {
   return (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-current" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
