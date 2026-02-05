@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react"; // 👈 [추가됨] 통계 기능 가져오기
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     type: "website",
   },
 
-  // ✅ 5. 네이버 소유권 확인 (코드 입력 완료!)
+  // 5. 네이버 소유권 확인 (아까 입력하신 코드 그대로 유지)
   verification: {
     other: {
       "naver-site-verification": "633ac7b3871aa163d4876b80c2ec438aa298f422",
@@ -60,6 +61,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Analytics /> {/* 👈 [추가됨] 여기에 통계 수집기가 설치되었습니다 */}
       </body>
     </html>
   );
